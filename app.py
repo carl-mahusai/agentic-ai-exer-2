@@ -5,8 +5,10 @@ from dotenv import load_dotenv
 
 from agents import Runner
 
+from openai.types.responses import ResponseTextDeltaEvent
+
 from agents_config import get_agent, get_persona_names
-from sessions import get_session
+from sessions import get_session, trim_session_history
 
 load_dotenv()
 
@@ -65,10 +67,11 @@ async def chat(message, history, username, persona, session_id):
 
     async for event in result.stream_events():
 
-        if (
-            event.type == "raw_response_event"
-            and event.data.type == "response.output_text.delta"
-        ):
+        # if (
+        #     event.type == "raw_response_event"
+        #     and event.data.type == "response.output_text.delta"
+        # ):
+        if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
 
             assistant_response += event.data.delta
 
@@ -80,7 +83,8 @@ async def chat(message, history, username, persona, session_id):
                 session_id,
             )
 
-
+    # Trim the conversation history after the response has completed.
+    await trim_session_history(session)
 # --------------------------------------------------------------------
 # Persona changed
 # --------------------------------------------------------------------

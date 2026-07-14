@@ -1,3 +1,5 @@
 # agentic-ai-exer-2
 
-python sample_agent.py
+pip install -r requirements.txt
+
+python app.py
