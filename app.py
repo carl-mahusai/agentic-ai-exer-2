@@ -1,4 +1,3 @@
-import os
 import uuid
 
 import gradio as gr
@@ -11,16 +10,27 @@ from sessions import get_session
 
 load_dotenv()
 
-DEFAULT_USER = "default"
 
+# --------------------------------------------------------------------
+# Chat callback
+# --------------------------------------------------------------------
 
-async def chat(message, history, persona, session_id):
+async def chat(message, history, username, persona, session_id):
 
-    history = history.copy()
+    if history is None:
+        history = []
+    else:
+        history = history.copy()
+
+    if not username.strip():
+        username = "guest"
+
+    session = get_session(
+        username=username,
+        session_id=session_id,
+    )
 
     agent = get_agent(persona)
-
-    session = get_session(session_id)
 
     history.append(
         {
@@ -55,21 +65,39 @@ async def chat(message, history, persona, session_id):
 
             history[-1]["content"] = assistant_response
 
-            yield "", history, session_id
+            yield (
+                "",
+                history,
+                session_id,
+            )
 
+
+# --------------------------------------------------------------------
+# Persona changed
+# --------------------------------------------------------------------
 
 def persona_changed(persona):
 
-    new_session_id = str(uuid.uuid4())
+    return (
+        [],
+        str(uuid.uuid4()),
+    )
 
-    return [], new_session_id
 
+# --------------------------------------------------------------------
+# UI
+# --------------------------------------------------------------------
 
 with gr.Blocks() as demo:
 
     gr.Markdown("# Personality-Driven Assistant")
 
     session_state = gr.State(str(uuid.uuid4()))
+
+    username = gr.Textbox(
+        label="Username",
+        value="Carl",
+    )
 
     persona = gr.Dropdown(
         choices=get_persona_names(),
@@ -93,6 +121,7 @@ with gr.Blocks() as demo:
         inputs=[
             message,
             chatbot,
+            username,
             persona,
             session_state,
         ],
@@ -108,6 +137,7 @@ with gr.Blocks() as demo:
         inputs=[
             message,
             chatbot,
+            username,
             persona,
             session_state,
         ],
