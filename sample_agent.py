@@ -4,6 +4,8 @@ import gradio as gr
 from dotenv import load_dotenv
 
 from agents import Agent, Runner
+from openai.types.responses import ResponseTextDeltaEvent
+
 load_dotenv()
 
 api_key = os.getenv("OPENAI_API_KEY")
@@ -47,24 +49,38 @@ PERSONA_AGENTS = {
 # Chat callback
 # --------------------------------------------------------------------
 
-def chat(message, history, persona):
+async def chat(message, history, persona):
+
+    history = history.copy()
+
     agent = PERSONA_AGENTS[persona]
-
-    result = Runner.run_sync(
-        agent,
-        message,
-    )
-
-    response = result.final_output
 
     history.append(
         {"role": "user", "content": message}
     )
+
     history.append(
-        {"role": "assistant", "content": response}
+        {"role": "assistant", "content": ""}
     )
 
-    return "", history
+    result = Runner.run_streamed(
+        agent,
+        input=message,
+    )
+
+    response = ""
+
+    async for event in result.stream_events():
+
+        if (
+            event.type == "raw_response_event"
+            and isinstance(event.data, ResponseTextDeltaEvent)
+        ):
+            response += event.data.delta
+
+            history[-1]["content"] = response
+
+            yield "", history
 
 
 # --------------------------------------------------------------------
@@ -99,8 +115,8 @@ with gr.Blocks() as demo:
     )
 
     message = gr.Textbox(
-        placeholder="Type your message...",
         label="Message",
+        placeholder="Type your message...",
     )
 
     send = gr.Button("Send")
