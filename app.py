@@ -10,6 +10,8 @@ from sessions import get_session
 
 load_dotenv()
 
+DEFAULT_USERNAME = "guest"
+
 
 # --------------------------------------------------------------------
 # Chat callback
@@ -46,9 +48,16 @@ async def chat(message, history, username, persona, session_id):
         }
     )
 
+    user_input = f"""
+    User name: {username}
+
+    Message:
+    {message}
+    """
+
     result = Runner.run_streamed(
         starting_agent=agent,
-        input=message,
+        input=user_input,
         session=session,
     )
 
@@ -80,6 +89,7 @@ def persona_changed(persona):
 
     return (
         [],
+        DEFAULT_USERNAME,    # Reset username
         str(uuid.uuid4()),
     )
 
@@ -96,7 +106,7 @@ with gr.Blocks() as demo:
 
     username = gr.Textbox(
         label="Username",
-        value="Carl",
+        value=DEFAULT_USERNAME,
     )
 
     persona = gr.Dropdown(
@@ -153,6 +163,7 @@ with gr.Blocks() as demo:
         inputs=persona,
         outputs=[
             chatbot,
+            username,
             session_state,
         ],
     )

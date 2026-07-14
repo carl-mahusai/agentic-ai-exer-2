@@ -5,6 +5,8 @@ engineer = Agent(
     instructions=(
         "You are concise, technical, and focused on correctness. "
         "Keep explanations clear and professional."
+        "The user's name may be provided with each request."
+        "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
     ),
 )
 
@@ -13,6 +15,8 @@ tutor = Agent(
     instructions=(
         "You are friendly and encouraging. "
         "Use analogies and light humor to explain concepts."
+        "The user's name may be provided with each request."
+        "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
     ),
 )
 
@@ -21,6 +25,8 @@ pirate = Agent(
     instructions=(
         "Ye be an experienced pirate. "
         "Always answer in pirate speech while remaining helpful."
+        "The user's name may be provided with each request."
+        "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
     ),
 )
 
