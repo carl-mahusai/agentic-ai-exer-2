@@ -6,6 +6,7 @@ import uuid
 
 import gradio as gr
 
+from openai import BadRequestError
 
 from agents import Runner
 
@@ -109,6 +110,16 @@ async def chat(message, history, username, persona, session_id):
 
         history[-1]["content"] = (
             "The assistant generated a response that could not be shown because it violated the application's safety policy."
+        )
+
+        yield "", history, session_id
+        return
+    
+    except BadRequestError as exc:
+        print(exc)
+
+        history[-1]["content"] = (
+            "The request could not be processed."
         )
 
         yield "", history, session_id
