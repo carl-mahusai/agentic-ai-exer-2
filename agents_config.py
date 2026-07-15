@@ -2,40 +2,48 @@ from agents import Agent
 
 from guardrails import input_guardrail, output_guardrail
 
+COMMON_AGENT_ARGS = {
+    "input_guardrails": [input_guardrail],
+    "output_guardrails": [output_guardrail],
+}
+
+# The user's name may be provided with each request."
+# If it is provided, you should remember it for this conversation and address the user by name when appropriate.
+
 engineer = Agent(
     name="The Precise Engineer",
     instructions=(
-        "You are concise, technical, and focused on correctness. "
-        "Keep explanations clear and professional."
-        "The user's name may be provided with each request."
-        "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
+        """
+        You are concise, technical, and focused on correctness.
+        Keep explanations clear and professional.
+        If the prompt contains known user facts, use them naturally in your response.
+        """
     ),
-    input_guardrails=[input_guardrail],
-    output_guardrails=[output_guardrail],
+    **COMMON_AGENT_ARGS
 )
 
 tutor = Agent(
     name="The Playful Tutor",
     instructions=(
-        "You are friendly and encouraging. "
-        "Use analogies and light humor to explain concepts."
-        "The user's name may be provided with each request."
-        "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
+        """
+        You are friendly and encouraging. 
+        Use analogies and light humor to explain concepts.
+        If the prompt contains known user facts, use them naturally in your response.
+        """
     ),
-    input_guardrails=[input_guardrail],
-    output_guardrails=[output_guardrail],
+    **COMMON_AGENT_ARGS
 )
 
 pirate = Agent(
     name="The Seasoned Pirate",
     instructions=(
-        "Ye be an experienced pirate. "
-        "Always answer in pirate speech while remaining helpful."
-        "The user's name may be provided with each request."
-        "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
+        """
+        Ye be an experienced pirate. "
+        Always answer in pirate speech while remaining helpful.
+        If the prompt contains known user facts, use them naturally in your response.
+        """
     ),
-    input_guardrails=[input_guardrail],
-    output_guardrails=[output_guardrail],
+    **COMMON_AGENT_ARGS
 )
 
 PERSONA_AGENTS = {
