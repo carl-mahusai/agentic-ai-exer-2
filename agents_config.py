@@ -1,5 +1,7 @@
 from agents import Agent
 
+from guardrails import input_guardrail, output_guardrail
+
 engineer = Agent(
     name="The Precise Engineer",
     instructions=(
@@ -8,6 +10,8 @@ engineer = Agent(
         "The user's name may be provided with each request."
         "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
     ),
+    input_guardrails=[input_guardrail],
+    output_guardrails=[output_guardrail],
 )
 
 tutor = Agent(
@@ -18,6 +22,8 @@ tutor = Agent(
         "The user's name may be provided with each request."
         "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
     ),
+    input_guardrails=[input_guardrail],
+    output_guardrails=[output_guardrail],
 )
 
 pirate = Agent(
@@ -28,6 +34,8 @@ pirate = Agent(
         "The user's name may be provided with each request."
         "If it is provided, you should remember it for this conversation and address the user by name when appropriate."
     ),
+    input_guardrails=[input_guardrail],
+    output_guardrails=[output_guardrail],
 )
 
 PERSONA_AGENTS = {

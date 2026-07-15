@@ -1,16 +1,23 @@
+from dotenv import load_dotenv
+load_dotenv()
+
+
 import uuid
 
 import gradio as gr
-from dotenv import load_dotenv
+
 
 from agents import Runner
+
+from agents.exceptions import (
+    InputGuardrailTripwireTriggered,
+    OutputGuardrailTripwireTriggered,
+)
 
 from openai.types.responses import ResponseTextDeltaEvent
 
 from agents_config import get_agent, get_persona_names
 from sessions import get_session, trim_session_history
-
-load_dotenv()
 
 DEFAULT_USERNAME = "guest"
 
@@ -57,34 +64,51 @@ async def chat(message, history, username, persona, session_id):
     {message}
     """
 
-    result = Runner.run_streamed(
-        starting_agent=agent,
-        input=user_input,
-        session=session,
-    )
+    try:
+        result = Runner.run_streamed(
+            starting_agent=agent,
+            input=user_input,
+            session=session,
+        )
+    except InputGuardrailTripwireTriggered:
+
+        history[-1]["content"] = (
+            "Your request was blocked because it violated the application's safety policy."
+        )
+
+        yield "", history, session_id
+        return
 
     assistant_response = ""
+    try:
+        async for event in result.stream_events():
 
-    async for event in result.stream_events():
+            # if (
+            #     event.type == "raw_response_event"
+            #     and event.data.type == "response.output_text.delta"
+            # ):
+            if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
 
-        # if (
-        #     event.type == "raw_response_event"
-        #     and event.data.type == "response.output_text.delta"
-        # ):
-        if event.type == "raw_response_event" and isinstance(event.data, ResponseTextDeltaEvent):
+                assistant_response += event.data.delta
 
-            assistant_response += event.data.delta
+                history[-1]["content"] = assistant_response
 
-            history[-1]["content"] = assistant_response
+                yield (
+                    "",
+                    history,
+                    session_id,
+                )
 
-            yield (
-                "",
-                history,
-                session_id,
-            )
+        # Trim the conversation history after the response has completed.
+        await trim_session_history(session)
+    except OutputGuardrailTripwireTriggered:
 
-    # Trim the conversation history after the response has completed.
-    await trim_session_history(session)
+        history[-1]["content"] = (
+            "The assistant generated a response that could not be shown because it violated the application's safety policy."
+        )
+
+        yield "", history, session_id
+        return
 # --------------------------------------------------------------------
 # Persona changed
 # --------------------------------------------------------------------
