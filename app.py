@@ -33,8 +33,10 @@ async def chat(message, history, username, persona, session_id):
     else:
         history = history.copy()
 
-    if not username.strip():
-        username = "guest"
+    username = username.strip()
+
+    if not username:
+        username = DEFAULT_USERNAME
 
     session = get_session(
         username=username,
@@ -70,17 +72,9 @@ async def chat(message, history, username, persona, session_id):
             input=user_input,
             session=session,
         )
-    except InputGuardrailTripwireTriggered:
 
-        history[-1]["content"] = (
-            "Your request was blocked because it violated the application's safety policy."
-        )
+        assistant_response = ""
 
-        yield "", history, session_id
-        return
-
-    assistant_response = ""
-    try:
         async for event in result.stream_events():
 
             # if (
@@ -101,6 +95,16 @@ async def chat(message, history, username, persona, session_id):
 
         # Trim the conversation history after the response has completed.
         await trim_session_history(session)
+        return
+    except InputGuardrailTripwireTriggered:
+
+        history[-1]["content"] = (
+            "Your request was blocked because it violated the application's safety policy."
+        )
+
+        yield "", history, session_id
+        return
+
     except OutputGuardrailTripwireTriggered:
 
         history[-1]["content"] = (
